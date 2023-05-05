@@ -254,6 +254,29 @@ void check_datatype(char *c)
     }
 
 }
+int variable_val(char *c)
+{
+    int ans;
+    int len=strlen(c);
+    if(len==3)
+    {
+       ans=10*(c[0]-'A')+c[1]-'0'; 
+    }
+    else if(len==2)
+    {
+        if(c[len-1]!='#' && c[len-1]!='%' && c[len-1]!='!' && c[len-1]!='$')
+        {
+            ans=10*(c[0]-'A')+c[1]-'0'; 
+
+        }
+        else
+        {
+            ans=10*(c[0]-'A'); 
+
+        }
+        dirty_variable[ans]=1;
+    }
+}
 
 
 
