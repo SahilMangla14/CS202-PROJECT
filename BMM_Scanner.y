@@ -6,6 +6,7 @@ int yylex();
 #include <ctype.h>
 #include <string.h>
 int symbol_table[1000];
+extern int yylineno;
 int expression_eval(char *s);
 int check_keyword(char *s);
 %}
@@ -15,11 +16,12 @@ int check_keyword(char *s);
 %token<num> number   
 %token print        
 %token let
+%token if_key then DEF func_key
 %token geq leq neq
 %token<keyword_val> keyword         
 %token <identifier_name> identifier
 %type <keyword_val> statement
-%type <keyword_val> print_statement
+%type <keyword_val> print_statement if_statement def_statement
 %type <keyword_val> variable_assign
 %type <num>expr term1 term2 term3 term4 term5 expr1 expr2 expr3 expr4 expr5 expression
 %token string
@@ -27,10 +29,14 @@ int check_keyword(char *s);
 %%
 
 line : line number statement|number statement;
-statement : variable_assign | print_statement;
+
+statement : variable_assign | print_statement | if_statement | def_statement;
+
 print_statement : print identifier ';'   {printf("%d\n",symbol_table[$2[0]-'A']);}
                 |print expression ';'  {printf("%d\n",$2);} ;        
+
 variable_assign : let identifier '=' expression ';' {symbol_table[$2[0]-'A']=$4;};
+
 expression: expr1                  {$$ = $1;}
             | expression geq expr1       {$$ = $1>= $3;};
 expr1:      expr2                   {$$ = $1;}
@@ -57,6 +63,11 @@ term4 : '(' expr ')'           {$$ = $2;}
         | term5                {$$ = $1;};
 term5 : number {$$=$1;};    
 
+if_statement: if_key expression then number ';';
+
+def_statement: DEF func_key '=' expression ';'
+            | DEF func_key '(' number ')' '=' expression ';';
+
 %%
 
 int main()
@@ -69,4 +80,7 @@ int main()
     return yyparse();
 }
 
-void yyerror (char *s) {fprintf (stderr, "%s\n", s);}
+// void yyerror (char *s) {fprintf (stderr, "%s\n", s);}
+void yyerror(char *s) {
+    fprintf(stderr, "line %d: %s\n", yylineno, s);
+}
