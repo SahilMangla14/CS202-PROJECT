@@ -20,8 +20,7 @@ int check_keyword(char *s);
 %type <keyword_val> statement
 %type <keyword_val> print_statement
 %type <keyword_val> variable_assign
-%type <num>expr
-%type <num>term
+%type <num>expr term1 term2 term3 term4 term5
 %token string
 
 %%
@@ -31,10 +30,19 @@ statement : variable_assign | print_statement;
 print_statement : print identifier ';'   {printf("%d\n",symbol_table[$2[0]-'A']);}
                 |print expr ';'  {printf("%d\n",$2);} ;        
 variable_assign : let identifier '=' expr ';' {symbol_table[$2[0]-'A']=$4;};
-expr : term {$$=$1;}
-        |expr '+' term {$$=$1+$3;}
-        |expr '-' term {$$=$1-$3;} ;
-term : number {$$=$1;};
+expr : term1 {$$=$1;}
+        |expr '+' term1 {$$=$1+$3;}
+        |expr '-' term1 {$$=$1-$3;} ;
+term1 :  term2                 {$$ = $1;}
+        | term1 '*' term2       {$$ = $1 * $3;}
+        | term1 '/' term2       {$$ = $1 / $3;};
+term2 : '-' term3               {$$ = -1 * $2;}
+        | term3                 {$$ = $1;};
+term3 : term4                   {$$ = $1;}
+        | term3 '^' term4       {$$ = $1 ^ $3;};
+term4 : '(' term5 ')'           {$$ = $2;}
+        | term5                 {$$ = $1;};
+term5 : number {$$=$1;};    
 
 %%
 
@@ -48,4 +56,4 @@ int main()
     return yyparse();
 }
 
-// void yyerror (char *s) {fprintf (stderr, "%s\n", s);}
+void yyerror (char *s) {fprintf (stderr, "%s\n", s);}
