@@ -11,7 +11,7 @@ int yyerror(char *s);
 "LET" {return let;}
 "PRINT" {return print;}
 [A-Z]  {/*"variable")*/;yylval.identifier_name=yytext; return identifier;}
-[-+=\/\*\(\)\^;]           	   {return yytext[0];}
+[-+=\/\*\(\)\^;(<=)(<=)(>)(<)(<>)]           	   {return yytext[0];}
 [ \t\n]                {;}
 .                    {}
 %%

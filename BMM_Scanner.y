@@ -20,7 +20,7 @@ int check_keyword(char *s);
 %type <keyword_val> statement
 %type <keyword_val> print_statement
 %type <keyword_val> variable_assign
-%type <num>expr term1 term2 term3 term4 term5
+%type <num>expr term1 term2 term3 term4 term5 expr1 expr2 expr3 expr4 expr5 expression
 %token string
 
 %%
@@ -28,8 +28,20 @@ int check_keyword(char *s);
 line : line number statement|number statement;
 statement : variable_assign | print_statement;
 print_statement : print identifier ';'   {printf("%d\n",symbol_table[$2[0]-'A']);}
-                |print expr ';'  {printf("%d\n",$2);} ;        
-variable_assign : let identifier '=' expr ';' {symbol_table[$2[0]-'A']=$4;};
+                |print expression ';'  {printf("%d\n",$2);} ;        
+variable_assign : let identifier '=' expression ';' {symbol_table[$2[0]-'A']=$4;};
+expression: expr                   {$$ = $1;}
+            | expr '>=' expr1       {$$ = $1>= $3;};
+expr1:      expr2                   {$$ = $1;}
+            | expr1 '<=' expr2      {$$ = $1 <= $3;};
+expr2:      expr3                   {$$ = $1;}
+            | expr2 '>' expr3       {$$ = $1 > $3;};
+expr3:      expr4                   {$$ = $1;}
+            | expr3 '<' expr4       {$$ = $1 < $3;};
+expr4:      expr5                   {$$ = $1;}
+            | expr4 '<>' expr5       {$$ = $1 != $3;};
+expr5:      expr                    {$$ = $1;}
+            | expr5 '=' expr        {$$ = $1 == $3;};
 expr : term1 {$$=$1;}
         |expr '+' term1 {$$=$1+$3;}
         |expr '-' term1 {$$=$1-$3;} ;
