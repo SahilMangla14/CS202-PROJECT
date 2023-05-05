@@ -40,8 +40,8 @@ term2 : '-' term3               {$$ = -1 * $2;}
         | term3                 {$$ = $1;};
 term3 : term4                   {$$ = $1;}
         | term3 '^' term4       {$$ = $1 ^ $3;};
-term4 : '(' term5 ')'           {$$ = $2;}
-        | term5                 {$$ = $1;};
+term4 : '(' expr ')'           {$$ = $2;}
+        | term5                {$$ = $1;};
 term5 : number {$$=$1;};    
 
 %%
