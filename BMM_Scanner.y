@@ -19,10 +19,10 @@ int check_keyword(char *s);
 %start line
 
 %token<num> number 
-%token <string> PLUS MINUS MULTIPLY DIVIDE EXP    GEQ LEQ GT LT NEQ EQ   AND OR XOR NOT     identifier PRINT LET IF INPUT COMMA GOSUB GOTO RETURN END STOP LEFT_BRACKET RIGHT_BRACKET func_name DEF THEN SEMI_COLON
+%token <string> PLUS MINUS MULTIPLY DIVIDE EXP    GEQ LEQ GT LT NEQ EQ   AND OR XOR NOT     identifier PRINT LET IF INPUT COMMA GOSUB GOTO RETURN END STOP DIM COMMENT LEFT_BRACKET RIGHT_BRACKET func_name DEF THEN SEMI_COLON
 
 %type<num> expression arithmetic_expr arithmetic_expr1 arithmetic_expr2 arithmetic_expr3 arithmetic_expr4 arithmetic_expr5  boolean_expr logical_expr
-%type<string> statement variable_assign print_statement if_statement def_statement gosub_statement goto_statement input_statement stop_statement end_statement return_statement identifier_list
+%type<string> statement variable_assign print_statement if_statement def_statement gosub_statement goto_statement input_statement stop_statement end_statement return_statement dim_statement identifier_list array_list array_type
 
 
 %%
@@ -35,11 +35,13 @@ statement:  variable_assign
             | if_statement
             | def_statement
             | input_statement
+            | dim_statement
             | gosub_statement
             | goto_statement
             | return_statement
             | end_statement
             | stop_statement
+            | rem_statement
     ;
 
 variable_assign:    LET identifier EQ expression SEMI_COLON
@@ -117,6 +119,16 @@ identifier_list:    identifier
                     | identifier_list COMMA identifier
     ;
 
+dim_statement:    DIM array_list SEMI_COLON
+    ;
+
+array_list:         array_type          
+                    |array_list COMMA array_type
+    ;
+array_type:         identifier LEFT_BRACKET number RIGHT_BRACKET
+                    | identifier LEFT_BRACKET number COMMA number RIGHT_BRACKET
+    ;
+
 gosub_statement:    GOSUB number SEMI_COLON
     ;
 
@@ -132,15 +144,18 @@ end_statement:      END SEMI_COLON
 stop_statement:     STOP SEMI_COLON
     ;
 
+rem_statement:      COMMENT
+    ;
+
 %%
 
-int main()
+int main(int argc, char* argv[])
 {
     for(int i=0;i<300;i++)
     {
         symbol_table[i]=0;
     }
-    
+
     return yyparse();
 }
 

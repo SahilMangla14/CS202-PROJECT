@@ -40,7 +40,9 @@ GOTO                       {printf("GOTO "); yylval.string = yytext; return GOTO
 RETURN                      {printf("RETURN "); yylval.string = yytext; return RETURN;}
 END                         {printf("END "); yylval.string = yytext; return END;}
 STOP                        {printf("STOP "); yylval.string = yytext; return STOP;}
+DIM                         {printf("DIM "); yylval.string = yytext; return DIM;}
 FN[A-Z]                     {printf("FUNC_NAME "); yylval.string = yytext; return func_name;}
+(^REM.*;$)                       {printf("COMMENT"); yylval.string = yytext; return COMMENT;} 
 [\n]                        {yylineno++;}
 [ \t]                {printf("Space ");}
 .                    {printf("Lexical error on line %d: unexpected character '%c'\n", yylineno, *yytext);}
