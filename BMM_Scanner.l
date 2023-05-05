@@ -9,7 +9,8 @@ int yylineno = 1;
 
 %%
 [0-9]+                      {printf("number "); yylval.num = atoi(yytext); return number; }
-[A-Z]                       {printf("identifier ");yylval.string = yytext; return identifier;}
+(([A-Z][0-9]?)|([A-Z][0-9]?(%|!|#|$)))                       {printf("identifier ");yylval.string = yytext; return identifier;}
+[\".\"]                      {printf("STRING"); yylval.string = yytext; return STRING;}
 [+]                         {printf("PLUS "); yylval.string = yytext; return PLUS;}
 [-]                         {printf("MINUS "); yylval.string = yytext; return MINUS;}
 \*                         {printf("MULTIPLY "); yylval.string = yytext; return MULTIPLY;}

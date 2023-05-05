@@ -23,7 +23,7 @@ void check_datatype(char *c);
 %start line
 
 %token<num> number 
-%token <string> PLUS MINUS MULTIPLY DIVIDE EXP    GEQ LEQ GT LT NEQ EQ   AND OR XOR NOT     identifier PRINT LET IF INPUT COMMA GOSUB GOTO RETURN END STOP DIM COMMENT LEFT_BRACKET RIGHT_BRACKET func_name DEF THEN SEMI_COLON
+%token <string> PLUS MINUS MULTIPLY DIVIDE EXP STRING    GEQ LEQ GT LT NEQ EQ   AND OR XOR NOT     identifier PRINT LET IF INPUT COMMA GOSUB GOTO RETURN END STOP DIM COMMENT LEFT_BRACKET RIGHT_BRACKET func_name DEF THEN SEMI_COLON
 
 %type<num> expression arithmetic_expr arithmetic_expr1 arithmetic_expr2 arithmetic_expr3 arithmetic_expr4 arithmetic_expr5  boolean_expr logical_expr
 %type<string> statement variable_assign print_statement if_statement def_statement gosub_statement goto_statement input_statement stop_statement end_statement return_statement dim_statement identifier_list array_list array_type
@@ -49,6 +49,7 @@ statement:  variable_assign
     ;
 
 variable_assign:    LET identifier EQ expression SEMI_COLON
+                    | LET identifier EQ STRING SEMI_COLON
     ;
 
 expression: arithmetic_expr 
@@ -103,6 +104,18 @@ logical_expr:   arithmetic_expr AND arithmetic_expr
                 | boolean_expr XOR arithmetic_expr
                 | NOT arithmetic_expr
                 | NOT boolean_expr
+                | NOT arithmetic_expr AND arithmetic_expr
+                | NOT boolean_expr AND boolean_expr
+                | NOT arithmetic_expr AND boolean_expr
+                | NOT boolean_expr AND arithmetic_expr
+                | NOT arithmetic_expr OR arithmetic_expr
+                | NOT boolean_expr OR boolean_expr
+                | NOT arithmetic_expr OR boolean_expr
+                | NOT boolean_expr OR arithmetic_expr
+                | NOT arithmetic_expr XOR arithmetic_expr
+                | NOT boolean_expr XOR boolean_expr
+                | NOT arithmetic_expr XOR boolean_expr
+                | NOT boolean_expr XOR arithmetic_expr
     ;
 
 if_statement:   IF boolean_expr THEN number SEMI_COLON
@@ -114,6 +127,7 @@ def_statement:  DEF func_name EQ arithmetic_expr SEMI_COLON
 
 print_statement:    PRINT identifier SEMI_COLON
                     | PRINT expression SEMI_COLON
+                    | PRINT STRING SEMI_COLON
     ;
 
 input_statement:    INPUT identifier_list SEMI_COLON
@@ -245,4 +259,4 @@ void check_datatype(char *c)
 
 void yyerror(char *s) {
     fprintf(stderr, "line %d: %s\n", yylineno, s);
-}
+}   
