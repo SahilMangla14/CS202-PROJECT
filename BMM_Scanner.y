@@ -15,6 +15,7 @@ int check_keyword(char *s);
 %token<num> number   
 %token print        
 %token let
+%token geq leq neq
 %token<keyword_val> keyword         
 %token <identifier_name> identifier
 %type <keyword_val> statement
@@ -30,16 +31,16 @@ statement : variable_assign | print_statement;
 print_statement : print identifier ';'   {printf("%d\n",symbol_table[$2[0]-'A']);}
                 |print expression ';'  {printf("%d\n",$2);} ;        
 variable_assign : let identifier '=' expression ';' {symbol_table[$2[0]-'A']=$4;};
-expression: expr                   {$$ = $1;}
-            | expr '>=' expr1       {$$ = $1>= $3;};
+expression: expr1                  {$$ = $1;}
+            | expression geq expr1       {$$ = $1>= $3;};
 expr1:      expr2                   {$$ = $1;}
-            | expr1 '<=' expr2      {$$ = $1 <= $3;};
+            | expr1 leq expr2      {$$ = $1 <= $3;};
 expr2:      expr3                   {$$ = $1;}
             | expr2 '>' expr3       {$$ = $1 > $3;};
 expr3:      expr4                   {$$ = $1;}
             | expr3 '<' expr4       {$$ = $1 < $3;};
 expr4:      expr5                   {$$ = $1;}
-            | expr4 '<>' expr5       {$$ = $1 != $3;};
+            | expr4 neq expr5       {$$ = $1 != $3;};
 expr5:      expr                    {$$ = $1;}
             | expr5 '=' expr        {$$ = $1 == $3;};
 expr : term1 {$$=$1;}

@@ -1,6 +1,6 @@
 %{
 #include<stdio.h>   
-#include"BMM_Scanner.tab.h"
+#include"b.tab.h"
 int yylex();
 int yyerror(char *s);
 %}
@@ -11,7 +11,10 @@ int yyerror(char *s);
 "LET" {return let;}
 "PRINT" {return print;}
 [A-Z]  {/*"variable")*/;yylval.identifier_name=yytext; return identifier;}
-[-+=\/\*\(\)\^;(<=)(<=)(>)(<)(<>)]           	   {return yytext[0];}
+[-+=\/\*\(\)\^;><=]           	   {return yytext[0];}
+">=" {return geq;}
+"<=" {return leq;}
+"<>" {return neq;}
 [ \t\n]                {;}
 .                    {}
 %%
