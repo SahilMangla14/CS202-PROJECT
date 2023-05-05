@@ -6,9 +6,11 @@ int yylex();
 #include <ctype.h>
 #include <string.h>
 int symbol_table[1000];
+int line_no[100000];
 extern int yylineno;
 int expression_eval(char *s);
 int check_keyword(char *s);
+void checkLineNum(int);
 %}
 
 %union {
@@ -26,8 +28,8 @@ int check_keyword(char *s);
 
 
 %%
-line:   line number statement
-        | number statement
+line:   line number statement               {checkLineNum($2); line_no[$2] = 1;}
+        | number statement                  {checkLineNum($1); line_no[$1] = 1;}
     ;
 
 statement:  variable_assign
@@ -149,11 +151,22 @@ rem_statement:      COMMENT
 
 %%
 
+void checkLineNum(int number){
+    if(line_no[number] != 0){
+        printf("ERROR: Line number cannot be same");
+        exit(1);
+    }
+}
+
 int main(int argc, char* argv[])
 {
     for(int i=0;i<300;i++)
     {
         symbol_table[i]=0;
+    }
+
+    for(int i=0;i<100000;i++){
+        line_no[i] = 0;
     }
 
     return yyparse();
