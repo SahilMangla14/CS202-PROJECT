@@ -11,6 +11,8 @@ extern int yylineno;
 int expression_eval(char *s);
 int check_keyword(char *s);
 void checkLineNum(int);
+int datatype[1000];
+void check_datatype(char *c);
 %}
 
 %union {
@@ -171,6 +173,74 @@ int main(int argc, char* argv[])
 
     return yyparse();
 }
+void check_datatype(char *c)
+{
+    int val1=10*(c[0]-'A')+(c[1]-'0');
+    int val2=10*(c[0]-'A');
+    int len=strlen(c);
+    if(c[len-1]=='%')
+    {
+        if(len==3)
+        {
+            datatype[val1]=0;
+        }
+        else
+        {
+            datatype[val2]=0;
+        }
+        
+    }
+    else if(c[len-1]=='!')
+    {
+        if(len==3)
+        {
+            datatype[val1]=1;
+        }
+        else
+        {
+            datatype[val2]=1;
+        }
+        
+    }
+    else if(c[len-1]=='#')
+    {
+        if(len==3)
+        {
+            datatype[val1]=2;
+        }
+        else
+        {
+            datatype[val2]=2;
+        }
+    
+    }
+    else if(c[len-1]=='$')
+    {
+        if(len==3)
+        {
+            datatype[val1]=3;
+        }
+        else
+        {
+            datatype[val2]=3;
+        }
+        
+    }
+    else
+    {
+        if(len==2)
+        {
+            datatype[val1]=3;
+        }
+        else
+        {
+            datatype[val2]=3;
+        }
+        
+    }
+
+}
+
 
 
 void yyerror(char *s) {
