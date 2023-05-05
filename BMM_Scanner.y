@@ -11,62 +11,126 @@ int expression_eval(char *s);
 int check_keyword(char *s);
 %}
 
-%union {char *identifier_name;int num; char *keyword_val; int expr_val; int term_val;} 
+%union {
+    char *string;
+    int num;
+}
+
 %start line
-%token<num> number   
-%token print        
-%token let
-%token if_key then DEF func_key
-%token geq leq neq
-%token<keyword_val> keyword         
-%token <identifier_name> identifier
-%type <keyword_val> statement
-%type <keyword_val> print_statement if_statement def_statement
-%type <keyword_val> variable_assign
-%type <num>expr term1 term2 term3 term4 term5 expr1 expr2 expr3 expr4 expr5 expression
-%token string
+
+%token<num> number 
+%token <string> PLUS MINUS MULTIPLY DIVIDE EXP    GEQ LEQ GT LT NEQ EQ   AND OR XOR NOT     identifier PRINT LET IF INPUT COMMA GOSUB GOTO RETURN END STOP LEFT_BRACKET RIGHT_BRACKET func_name DEF THEN SEMI_COLON
+
+%type<num> expression arithmetic_expr arithmetic_expr1 arithmetic_expr2 arithmetic_expr3 arithmetic_expr4 arithmetic_expr5  boolean_expr logical_expr
+%type<string> statement variable_assign print_statement if_statement def_statement gosub_statement goto_statement input_statement stop_statement end_statement return_statement identifier_list
+
 
 %%
+line:   line number statement
+        | number statement
+    ;
 
-line : line number statement|number statement;
+statement:  variable_assign
+            | print_statement
+            | if_statement
+            | def_statement
+            | input_statement
+            | gosub_statement
+            | goto_statement
+            | return_statement
+            | end_statement
+            | stop_statement
+    ;
 
-statement : variable_assign | print_statement | if_statement | def_statement;
+variable_assign:    LET identifier EQ expression SEMI_COLON
+    ;
 
-print_statement : print identifier ';'   {printf("%d\n",symbol_table[$2[0]-'A']);}
-                |print expression ';'  {printf("%d\n",$2);} ;        
+expression: arithmetic_expr 
+            | boolean_expr
+            | logical_expr
+    ;
 
-variable_assign : let identifier '=' expression ';' {symbol_table[$2[0]-'A']=$4;};
+arithmetic_expr:    arithmetic_expr1
+                    | arithmetic_expr PLUS arithmetic_expr1
+                    | arithmetic_expr MINUS arithmetic_expr1
+    ;
 
-expression: expr1                  {$$ = $1;}
-            | expression geq expr1       {$$ = $1>= $3;};
-expr1:      expr2                   {$$ = $1;}
-            | expr1 leq expr2      {$$ = $1 <= $3;};
-expr2:      expr3                   {$$ = $1;}
-            | expr2 '>' expr3       {$$ = $1 > $3;};
-expr3:      expr4                   {$$ = $1;}
-            | expr3 '<' expr4       {$$ = $1 < $3;};
-expr4:      expr5                   {$$ = $1;}
-            | expr4 neq expr5       {$$ = $1 != $3;};
-expr5:      expr                    {$$ = $1;}
-            | expr5 '=' expr        {$$ = $1 == $3;};
-expr : term1 {$$=$1;}
-        |expr '+' term1 {$$=$1+$3;}
-        |expr '-' term1 {$$=$1-$3;} ;
-term1 :  term2                 {$$ = $1;}
-        | term1 '*' term2       {$$ = $1 * $3;}
-        | term1 '/' term2       {$$ = $1 / $3;};
-term2 : '-' term3               {$$ = -1 * $2;}
-        | term3                 {$$ = $1;};
-term3 : term4                   {$$ = $1;}
-        | term3 '^' term4       {$$ = $1 ^ $3;};
-term4 : '(' expr ')'           {$$ = $2;}
-        | term5                {$$ = $1;};
-term5 : number {$$=$1;};    
+arithmetic_expr1:   arithmetic_expr2
+                    | arithmetic_expr1 MULTIPLY arithmetic_expr2
+                    | arithmetic_expr1 DIVIDE arithmetic_expr2
+    ;
 
-if_statement: if_key expression then number ';';
+arithmetic_expr2:   MINUS arithmetic_expr3
+                    | arithmetic_expr3
+    ;
 
-def_statement: DEF func_key '=' expression ';'
-            | DEF func_key '(' number ')' '=' expression ';';
+arithmetic_expr3:   arithmetic_expr4
+                    | arithmetic_expr4 EXP arithmetic_expr4
+    ;
+
+arithmetic_expr4:   LEFT_BRACKET arithmetic_expr RIGHT_BRACKET
+                    | arithmetic_expr5
+    ;
+
+arithmetic_expr5:   number
+
+
+boolean_expr:   arithmetic_expr GEQ arithmetic_expr
+                | arithmetic_expr LEQ arithmetic_expr
+                | arithmetic_expr GT arithmetic_expr
+                | arithmetic_expr LT arithmetic_expr
+                | arithmetic_expr NEQ arithmetic_expr
+                | arithmetic_expr EQ arithmetic_expr
+    ;
+
+logical_expr:   arithmetic_expr AND arithmetic_expr
+                | boolean_expr AND boolean_expr
+                | arithmetic_expr AND boolean_expr
+                | boolean_expr AND arithmetic_expr
+                | arithmetic_expr OR arithmetic_expr
+                | boolean_expr OR boolean_expr
+                | arithmetic_expr OR boolean_expr
+                | boolean_expr OR arithmetic_expr
+                | arithmetic_expr XOR arithmetic_expr
+                | boolean_expr XOR boolean_expr
+                | arithmetic_expr XOR boolean_expr
+                | boolean_expr XOR arithmetic_expr
+                | NOT arithmetic_expr
+                | NOT boolean_expr
+    ;
+
+if_statement:   IF boolean_expr THEN number SEMI_COLON
+    ;
+
+def_statement:  DEF func_name EQ arithmetic_expr SEMI_COLON
+                | DEF func_name LEFT_BRACKET number RIGHT_BRACKET EQ arithmetic_expr SEMI_COLON
+    ;
+
+print_statement:    PRINT identifier SEMI_COLON
+                    | PRINT expression SEMI_COLON
+    ;
+
+input_statement:    INPUT identifier_list SEMI_COLON
+    ;
+
+identifier_list:    identifier
+                    | identifier_list COMMA identifier
+    ;
+
+gosub_statement:    GOSUB number SEMI_COLON
+    ;
+
+goto_statement:     GOTO number SEMI_COLON
+    ;
+
+return_statement:   RETURN SEMI_COLON
+    ;
+
+end_statement:      END SEMI_COLON
+    ;
+
+stop_statement:     STOP SEMI_COLON
+    ;
 
 %%
 
@@ -80,7 +144,7 @@ int main()
     return yyparse();
 }
 
-// void yyerror (char *s) {fprintf (stderr, "%s\n", s);}
+
 void yyerror(char *s) {
     fprintf(stderr, "line %d: %s\n", yylineno, s);
 }
