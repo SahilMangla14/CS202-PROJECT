@@ -12,7 +12,9 @@ int check_keyword(char *s);
 
 %union {char *identifier_name;int num; char *keyword_val; int expr_val; int term_val;} 
 %start line
-%token<num> number           
+%token<num> number   
+%token print        
+%token let
 %token<keyword_val> keyword         
 %token <identifier_name> identifier
 %type <keyword_val> statement
@@ -26,9 +28,9 @@ int check_keyword(char *s);
 
 line : line number statement|number statement;
 statement : variable_assign | print_statement;
-print_statement : keyword identifier ';'   {printf("%d\n",symbol_table[$2[0]-'A']);}
-                |keyword expr ';'  {printf("%d\n",$2);} ;        
-variable_assign : keyword identifier '=' expr ';' {symbol_table[$2[0]-'A']=$4;};
+print_statement : print identifier ';'   {printf("%d\n",symbol_table[$2[0]-'A']);}
+                |print expr ';'  {printf("%d\n",$2);} ;        
+variable_assign : let identifier '=' expr ';' {symbol_table[$2[0]-'A']=$4;};
 expr : term {$$=$1;}
         |expr '+' term {$$=$1+$3;}
         |expr '-' term {$$=$1-$3;} ;
@@ -46,4 +48,4 @@ int main()
     return yyparse();
 }
 
-void yyerror (char *s) {fprintf (stderr, "%s\n", s);}
+// void yyerror (char *s) {fprintf (stderr, "%s\n", s);}

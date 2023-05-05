@@ -8,10 +8,11 @@ int yyerror(char *s);
 
 %%
 [0-9]+ {/*printf("number");*/ yylval.num=atoi(yytext); return number ;}
-("LET"|"PRINT") {/*printf("keyword");*/yylval.keyword_val=yytext; return keyword;}
+"LET" {return let;}
+"PRINT" {return print;}
 [A-Z]  {/*"variable")*/;yylval.identifier_name=yytext; return identifier;}
 [-+=;]           	   {return yytext[0];}
-[ \t\n]                {return yytext[0];}
+[ \t\n]                {;}
 .                    {}
 %%
 
