@@ -5,28 +5,34 @@ int yylex();
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
+extern FILE* yyout, *yyin;
+FILE* lexout;
 int symbol_table[1000];
 int line_no[100000];
 extern int yylineno;
-int expression_eval(char *s);
-int check_keyword(char *s);
+// int expression_eval(char *s);
+// int check_keyword(char *s);
+// int variable_val(char *c);
 void checkLineNum(int);
 int datatype[1000];
-void check_datatype(char *c);
+int dirty_variable[1000];
+// void check_datatype(char *c);
 %}
 
 %union {
     char *string;
     int num;
+    float num1;
+    char *c;
 }
 
 %start line
 
-%token<num> number 
-%token <string> PLUS MINUS MULTIPLY DIVIDE EXP STRING    GEQ LEQ GT LT NEQ EQ   AND OR XOR NOT     identifier PRINT LET IF INPUT COMMA GOSUB GOTO RETURN END STOP DIM COMMENT LEFT_BRACKET RIGHT_BRACKET func_name DEF THEN SEMI_COLON
-
-%type<num> expression arithmetic_expr arithmetic_expr1 arithmetic_expr2 arithmetic_expr3 arithmetic_expr4 arithmetic_expr5  boolean_expr logical_expr
-%type<string> statement variable_assign print_statement if_statement def_statement gosub_statement goto_statement input_statement stop_statement end_statement return_statement dim_statement identifier_list array_list array_type
+%token <num> number
+%token <num1> float_num
+%token PLUS MINUS MULTIPLY DIVIDE EXP STRING    GEQ LEQ GT LT NEQ EQ   AND OR XOR NOT SEMICOLON     num_identifier1 num_identifier2 string_identifier PRINT LET IF INPUT COMMA GOSUB GOTO RETURN END STOP DIM COMMENT DATA LEFT_BRACKET RIGHT_BRACKET func_name DEF THEN NEWLINE
+/* %type expression arithmetic_expr arithmetic_expr1 arithmetic_expr2 arithmetic_expr3 arithmetic_expr4 arithmetic_expr5  boolean_expr logical_expr */
+/* %type<string> statement variable_assign print_statement if_statement def_statement for_statement gosub_statement goto_statement input_statement stop_statement end_statement return_statement dim_statement identifier_list array_list array_type */
 
 
 %%
@@ -40,6 +46,7 @@ statement:  variable_assign
             | def_statement
             | input_statement
             | dim_statement
+            | data_statement
             | gosub_statement
             | goto_statement
             | return_statement
@@ -48,8 +55,11 @@ statement:  variable_assign
             | rem_statement
     ;
 
-variable_assign:    LET identifier EQ expression SEMI_COLON
-                    | LET identifier EQ STRING SEMI_COLON
+variable_assign:    
+        LET num_identifier1 EQ expression NEWLINE 
+        | LET num_identifier2 EQ expression NEWLINE     
+        | LET string_identifier EQ STRING NEWLINE  
+        | error '\n'        {printf("WRONG VARIABLE ASSIGNMENT"); }         
     ;
 
 expression: arithmetic_expr 
@@ -80,6 +90,9 @@ arithmetic_expr4:   LEFT_BRACKET arithmetic_expr RIGHT_BRACKET
     ;
 
 arithmetic_expr5:   number
+                    | float_num
+                    | num_identifier1
+                    | num_identifier2
 
 
 boolean_expr:   arithmetic_expr GEQ arithmetic_expr
@@ -118,53 +131,95 @@ logical_expr:   arithmetic_expr AND arithmetic_expr
                 | NOT boolean_expr XOR arithmetic_expr
     ;
 
-if_statement:   IF boolean_expr THEN number SEMI_COLON
+if_statement:   IF boolean_expr THEN number NEWLINE
     ;
 
-def_statement:  DEF func_name EQ arithmetic_expr SEMI_COLON
-                | DEF func_name LEFT_BRACKET number RIGHT_BRACKET EQ arithmetic_expr SEMI_COLON
+def_statement:  DEF func_name EQ arithmetic_expr NEWLINE
+                | DEF func_name LEFT_BRACKET num_identifier1 RIGHT_BRACKET EQ arithmetic_expr NEWLINE
+                | DEF func_name LEFT_BRACKET num_identifier2 RIGHT_BRACKET EQ arithmetic_expr NEWLINE
     ;
 
-print_statement:    PRINT identifier SEMI_COLON
-                    | PRINT expression SEMI_COLON
-                    | PRINT STRING SEMI_COLON
+/* print_statement:    PRINT num_identifier1 NEWLINE        
+                    | PRINT num_identifier2 NEWLINE
+                    | PRINT string_identifier NEWLINE
+                    | PRINT expression NEWLINE
+                    | PRINT STRING NEWLINE
+
+    ; */
+
+print_statement:    PRINT expression_type1 NEWLINE
+                    | PRINT expression_type2 NEWLINE
     ;
 
-input_statement:    INPUT identifier_list SEMI_COLON
+expression_type1:   expression_list
+                    | expression_type1 DELIMITER expression_list
+
     ;
 
-identifier_list:    identifier
-                    | identifier_list COMMA identifier
+expression_type2:   expression_list DELIMITER
+                    | expression_list DELIMITER expression_type2
     ;
 
-dim_statement:    DIM array_list SEMI_COLON
+expression_list:    num_identifier1
+                    | num_identifier2
+                    | string_identifier
+                    | expression
+                    | STRING
+    ;
+
+DELIMITER:          COMMA
+                    | SEMICOLON
+    ;
+
+input_statement:    INPUT identifier_list NEWLINE
+    ;
+
+identifier_list:    num_identifier1
+                    | num_identifier2
+                    | string_identifier
+                    | identifier_list COMMA num_identifier1
+                    | identifier_list COMMA num_identifier2
+                    | identifier_list COMMA string_identifier
+    ;
+
+dim_statement:    DIM array_list NEWLINE
     ;
 
 array_list:         array_type          
                     |array_list COMMA array_type
     ;
-array_type:         identifier LEFT_BRACKET number RIGHT_BRACKET
-                    | identifier LEFT_BRACKET number COMMA number RIGHT_BRACKET
+array_type:         num_identifier1 LEFT_BRACKET number RIGHT_BRACKET
+                    | num_identifier1 LEFT_BRACKET number COMMA number RIGHT_BRACKET
     ;
 
-gosub_statement:    GOSUB number SEMI_COLON
+gosub_statement:    GOSUB number NEWLINE
     ;
 
-goto_statement:     GOTO number SEMI_COLON
+goto_statement:     GOTO number NEWLINE
     ;
 
-return_statement:   RETURN SEMI_COLON
+return_statement:   RETURN NEWLINE
     ;
 
-end_statement:      END SEMI_COLON
+end_statement:      END NEWLINE
     ;
 
-stop_statement:     STOP SEMI_COLON
+stop_statement:     STOP NEWLINE
     ;
 
 rem_statement:      COMMENT
     ;
 
+data_statement:     DATA data_list NEWLINE
+    ;
+
+data_list:      number
+                | float_num
+                | STRING
+                | data_list COMMA number
+                | data_list COMMA float_num
+                | data_list COMMA STRING
+    ;
 %%
 
 void checkLineNum(int number){
@@ -185,97 +240,10 @@ int main(int argc, char* argv[])
         line_no[i] = 0;
     }
 
+    yyin = fopen(argv[1],"r");
+    yyout = fopen("out.txt","w");
+    lexout = fopen("lexout.txt","w");
     return yyparse();
-}
-void check_datatype(char *c)
-{
-    int val1=10*(c[0]-'A')+(c[1]-'0');
-    int val2=10*(c[0]-'A');
-    int len=strlen(c);
-    if(c[len-1]=='%')
-    {
-        if(len==3)
-        {
-            datatype[val1]=0;
-        }
-        else
-        {
-            datatype[val2]=0;
-        }
-        
-    }
-    else if(c[len-1]=='!')
-    {
-        if(len==3)
-        {
-            datatype[val1]=1;
-        }
-        else
-        {
-            datatype[val2]=1;
-        }
-        
-    }
-    else if(c[len-1]=='#')
-    {
-        if(len==3)
-        {
-            datatype[val1]=2;
-        }
-        else
-        {
-            datatype[val2]=2;
-        }
-    
-    }
-    else if(c[len-1]=='$')
-    {
-        if(len==3)
-        {
-            datatype[val1]=3;
-        }
-        else
-        {
-            datatype[val2]=3;
-        }
-        
-    }
-    else
-    {
-        if(len==2)
-        {
-            datatype[val1]=3;
-        }
-        else
-        {
-            datatype[val2]=3;
-        }
-        
-    }
-
-}
-int variable_val(char *c)
-{
-    int ans;
-    int len=strlen(c);
-    if(len==3)
-    {
-       ans=10*(c[0]-'A')+c[1]-'0'; 
-    }
-    else if(len==2)
-    {
-        if(c[len-1]!='#' && c[len-1]!='%' && c[len-1]!='!' && c[len-1]!='$')
-        {
-            ans=10*(c[0]-'A')+c[1]-'0'; 
-
-        }
-        else
-        {
-            ans=10*(c[0]-'A'); 
-
-        }
-        dirty_variable[ans]=1;
-    }
 }
 
 
